@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadence – Administration</title>
+<style>
+:root{
+  --bg:#faf8f5;--card:#f4f1ed;--card2:#ebe8f1;--ink:#1c1b22;--muted:#5d5c68;--line:#d9d5de;
+  --primary:#4f46e5;--on-primary:#fff;--accent:#0d9488;--danger:#ba1a1a;--radius:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0e1015;--card:#14161d;--card2:#1f232c;--ink:#e7e5ec;--muted:#a5a4b0;--line:#33353f;
+    --primary:#a9acff;--on-primary:#1b1a6b;--accent:#5eead4;--danger:#ffb4ab}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid var(--line);background:var(--card);flex-wrap:wrap}
+header h1{font-size:20px;margin:0;letter-spacing:-.2px}
+header .dot{width:34px;height:34px;border-radius:11px;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700}
+header .sp{flex:1}
+.btn{border:0;border-radius:999px;padding:9px 18px;background:var(--card2);cursor:pointer;font-weight:600;text-decoration:none;display:inline-block;color:var(--ink)}
+.btn:hover{filter:brightness(.96)}
+.btn.primary{background:var(--primary);color:var(--on-primary)}
+.btn.danger{color:var(--danger)}
+.btn.small{padding:5px 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+main{display:grid;grid-template-columns:minmax(290px,390px) 1fr;height:calc(100vh - 61px)}
+aside{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:6px;padding:12px 14px 0}
+.tab{flex:1;border:0;border-radius:12px 12px 0 0;padding:9px;background:transparent;font-weight:700;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+aside .tools{padding:12px 14px;display:flex;gap:8px}
+input[type=text],input[type=search],input[type=number],input[type=password],textarea,select{
+  width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--primary);outline-offset:-1px}
+#list{overflow:auto;padding:0 14px 14px;flex:1}
+.song{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--card);margin-bottom:8px;cursor:pointer;border:2px solid transparent}
+.song.sel{border-color:var(--primary)}
+.badge{min-width:42px;height:42px;border-radius:13px;background:var(--card2);display:grid;place-items:center;font-weight:700;font-size:14px}
+.song .t{font-weight:600}.song .a{color:var(--muted);font-size:14px}
+.fav{color:#d97706}
+#editor{overflow:auto;padding:24px;min-height:0}
+.form{max-width:860px;margin:0 auto;display:grid;gap:14px}
+.row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto}.row{grid-template-columns:1fr 1fr}aside{border-right:0}}
+label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
+textarea#content{min-height:380px;font:15px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow:auto}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.empty{display:grid;place-items:center;height:100%;color:var(--muted);text-align:center;padding:30px}
+#login{max-width:360px;margin:12vh auto;padding:28px;background:var(--card);border-radius:24px;display:grid;gap:14px;text-align:center}
+#login input{font-size:28px;text-align:center;letter-spacing:10px}
+.msg{min-height:20px;font-size:14px}.msg.err{color:var(--danger)}.msg.ok{color:var(--accent)}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:12px;text-align:center;color:var(--muted);font-size:14px}
+.drop.over{border-color:var(--primary);background:var(--card)}
+.box{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);padding:12px 14px;border-radius:14px}
+.hidden{display:none!important}
+.entry{display:flex;gap:8px;align-items:center;background:var(--card);border-radius:12px;padding:8px 12px;margin-bottom:6px}
+.entry .n{width:26px;color:var(--muted);font-weight:700}
+.entry .grow{flex:1}
+.pick{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:6px}
+.pick label{display:flex;gap:10px;align-items:center;font-size:15px;font-weight:500;color:var(--ink);padding:5px 8px;border-radius:8px}
+.pick label:hover{background:var(--card)}
+.pick input{width:auto}
+h2{margin:0}
+</style>
+</head>
+<body>
+<div id="login" class="hidden">
+  <div style="margin:auto;width:54px;height:54px;border-radius:17px;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700;font-size:26px">C</div>
+  <h1 style="margin:0">Cadence – Administration</h1>
+  <p class="hint">Entrez le code à 4 chiffres affiché dans l'application (Réglages → Serveurs Wi-Fi).</p>
+  <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
+  <button class="btn primary" id="go">Se connecter</button>
+  <div id="loginMsg" class="msg err"></div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <div class="dot">C</div><h1>Cadence – Administration</h1><span class="sp"></span>
+    <span id="count" class="hint"></span>
+    <a class="btn small" id="backup" href="#">Télécharger une sauvegarde</a>
+    <button class="btn small" id="quit">Se déconnecter</button>
+  </header>
+  <main>
+    <aside>
+      <div class="tabs">
+        <button class="tab on" id="tabSongs">Morceaux</button>
+        <button class="tab" id="tabSets">Sets</button>
+      </div>
+      <div class="tools">
+        <input id="q" type="search" placeholder="Rechercher…">
+        <button class="btn primary" id="new">+ Nouveau</button>
+      </div>
+      <div style="padding:0 14px 10px" id="dropWrap">
+        <div class="drop" id="drop">Glissez ici des fichiers <b>.pdf</b>, <b>.txt</b>, <b>.cho</b> ou <b>MuseScore (.mscz)</b></div>
+      </div>
+      <div id="list"></div>
+    </aside>
+    <section id="editor"></section>
+  </main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let PIN = sessionStorage.getItem('pin') || '';
+let songs = [], sets = [], current = null, currentSet = null, dirty = false, tab = 'songs';
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+async function api(path, opts){
+  opts = opts || {};
+  const headers = Object.assign({'X-Pin':PIN}, opts.headers||{});
+  const r = await fetch('/api/'+path, Object.assign({}, opts, {headers}));
+  if (r.status === 401){ showLogin('Code incorrect.'); throw new Error('401'); }
+  const text = await r.text();
+  let data = null; try { data = JSON.parse(text); } catch(e) {}
+  if (!r.ok) throw new Error((data && data.error) || ('Erreur '+r.status));
+  return data;
+}
+function jpost(path, obj, method){ return api(path,{method:method||'POST',body:JSON.stringify(obj||{})}); }
+
+function showLogin(msg){
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+  $('#loginMsg').textContent = msg||''; $('#pin').value=''; $('#pin').focus();
+}
+async function login(){
+  PIN = $('#pin').value.trim();
+  try { await api('ping'); sessionStorage.setItem('pin', PIN); start(); } catch(e){ /* géré dans api */ }
+}
+$('#go').onclick = login;
+$('#pin').addEventListener('keydown', e=>{ if(e.key==='Enter') login(); });
+$('#quit').onclick = ()=>{ sessionStorage.removeItem('pin'); PIN=''; showLogin(''); };
+
+async function start(){
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  $('#backup').href = '/api/backup?pin='+encodeURIComponent(PIN);
+  await refresh(); renderEmpty();
+}
+async function refresh(){
+  songs = await api('songs');
+  sets = await api('sets');
+  renderList();
+}
+
+// ---------- Onglets ----------
+function setTab(t){
+  tab = t;
+  $('#tabSongs').classList.toggle('on', t==='songs');
+  $('#tabSets').classList.toggle('on', t==='sets');
+  $('#new').textContent = t==='songs' ? '+ Nouveau' : '+ Nouveau set';
+  $('#dropWrap').classList.toggle('hidden', t!=='songs');
+  $('#q').placeholder = t==='songs' ? 'Rechercher…' : 'Rechercher un set…';
+  renderList(); renderEmpty();
+}
+$('#tabSongs').onclick = ()=>{ if (dirty && !confirm('Abandonner les modifications non enregistrées ?')) return; dirty=false; setTab('songs'); };
+$('#tabSets').onclick = ()=>{ if (dirty && !confirm('Abandonner les modifications non enregistrées ?')) return; dirty=false; setTab('sets'); };
+
+function renderList(){
+  const q = $('#q').value.trim().toLowerCase();
+  if (tab === 'songs'){
+    const items = songs.filter(s=>!q || (s.title+' '+s.artist+' '+s.tags).toLowerCase().includes(q))
+      .sort((a,b)=>a.title.localeCompare(b.title,'fr',{sensitivity:'base'}));
+    $('#count').textContent = songs.length + ' morceau' + (songs.length>1?'x':'') + ' · ' + sets.length + ' set' + (sets.length>1?'s':'');
+    $('#list').innerHTML = items.map(s=>
+      '<div class="song'+(current&&current.id===s.id?' sel':'')+'" data-id="'+s.id+'">'+
+      '<div class="badge">'+esc(s.key|| (s.hasScore?'🎼':(s.hasPdf?'PDF':'♪')))+'</div>'+
+      '<div><div class="t">'+(s.favorite?'<span class="fav">★</span> ':'')+esc(s.title||'Sans titre')+'</div><div class="a">'+esc(s.artist)+'</div></div></div>').join('')
+      || '<p class="hint" style="padding:10px">Aucun morceau.</p>';
+    document.querySelectorAll('#list .song').forEach(el=>el.onclick=()=>openSong(+el.dataset.id));
+  } else {
+    const items = sets.filter(s=>!q || s.name.toLowerCase().includes(q));
+    $('#list').innerHTML = items.map(s=>
+      '<div class="song'+(currentSet&&currentSet.id===s.id?' sel':'')+'" data-id="'+s.id+'">'+
+      '<div class="badge">'+s.count+'</div><div><div class="t">'+esc(s.name)+'</div><div class="a">'+s.count+' morceau'+(s.count>1?'x':'')+'</div></div></div>').join('')
+      || '<p class="hint" style="padding:10px">Aucun set. Cliquez sur « + Nouveau set ».</p>';
+    document.querySelectorAll('#list .song').forEach(el=>el.onclick=()=>openSet(+el.dataset.id));
+  }
+}
+$('#q').oninput = renderList;
+
+function renderEmpty(){
+  current = null; currentSet = null;
+  $('#editor').innerHTML = tab==='songs'
+    ? '<div class="empty"><div><h2>Choisissez un morceau</h2><p>ou cliquez sur « + Nouveau » pour en créer un.<br>Les modifications apparaissent tout de suite sur l\'appareil.</p></div></div>'
+    : '<div class="empty"><div><h2>Choisissez un set</h2><p>ou créez une liste de morceaux pour votre concert avec « + Nouveau set ».</p></div></div>';
+  renderList();
+}
+
+$('#new').onclick = async ()=>{
+  if (dirty && !confirm('Abandonner les modifications non enregistrées ?')) return;
+  if (tab === 'songs') { newSong(); return; }
+  const name = prompt('Nom du nouveau set :');
+  if (!name) return;
+  try { const r = await jpost('sets',{name}); await refresh(); openSet(r.id); } catch(e){ alert(e.message); }
+};
+
+// ---------- Morceaux ----------
+async function openSong(id){
+  if (dirty && !confirm('Abandonner les modifications non enregistrées ?')) return;
+  const s = await api('songs/'+id);
+  showEditor(s);
+}
+function newSong(){
+  showEditor({id:0,title:'',artist:'',key:'',tempo:0,timeSig:'4/4',capo:0,tags:'',notes:'',content:'',hasPdf:false,hasScore:false,favorite:false});
+}
+
+function showEditor(s){
+  current = s; dirty = false;
+  const fileBtn = (id, accept, label) => '<label class="btn" style="display:inline-block;color:var(--ink)">'+label+'<input id="'+id+'" type="file" accept="'+accept+'" class="hidden"></label>';
+  const pdf = s.id ? (s.hasPdf
+    ? '<div class="box"><b>Partition PDF jointe</b><a class="btn small" target="_blank" href="/api/songs/'+s.id+'/pdf?pin='+encodeURIComponent(PIN)+'">Ouvrir</a>'+
+      fileBtn('pdfin','application/pdf','Remplacer')+'<button class="btn danger small" id="pdfdel">Retirer le PDF</button></div>'
+    : '<div class="box"><b>Partition PDF</b>'+fileBtn('pdfin','application/pdf','Joindre un PDF')+'</div>')
+    : '<p class="hint">Enregistrez d\'abord le morceau pour pouvoir y joindre un PDF ou une partition MuseScore.</p>';
+  const score = s.id ? (s.hasScore
+    ? '<div class="box"><b>🎼 Partition MuseScore jointe</b><span class="hint">lisible en solfège et jouable dans l\'appli</span>'+
+      fileBtn('scorein','.mscz,.mscx','Remplacer')+'<button class="btn danger small" id="scoredel">Retirer</button></div>'
+    : '<div class="box"><b>🎼 Partition MuseScore</b><span class="hint">.mscz ou .mscx : solfège + lecture avec 8 instruments</span>'+fileBtn('scorein','.mscz,.mscx','Joindre une partition')+'</div>')
+    : '';
+  const setOpts = sets.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+  const extra = s.id ? (
+    '<div class="box"><b>Outils</b>'+
+    '<button class="btn small" id="fav">'+(s.favorite?'★ Retirer des favoris':'☆ Ajouter aux favoris')+'</button>'+
+    '<button class="btn small" id="dup">Dupliquer</button>'+
+    '<a class="btn small" href="/api/songs/'+s.id+'/export?pin='+encodeURIComponent(PIN)+'">Exporter (.cho)</a>'+
+    (sets.length ? '<select id="setsel" style="width:auto">'+setOpts+'</select><button class="btn small" id="toset">Ajouter à ce set</button>' : '<span class="hint">Créez un set pour y ajouter ce morceau.</span>')+
+    '</div>') : '';
+  $('#editor').innerHTML =
+  '<div class="form">'+
+  '<div class="row" style="grid-template-columns:2fr 2fr">'+
+    '<label>Titre<input type="text" id="title" value="'+esc(s.title)+'"></label>'+
+    '<label>Artiste<input type="text" id="artist" value="'+esc(s.artist)+'"></label></div>'+
+  '<div class="row">'+
+    '<label>Tonalité<input type="text" id="key" value="'+esc(s.key)+'" placeholder="Ex. G, Am"></label>'+
+    '<label>Tempo (bpm)<input type="number" id="tempo" min="0" max="400" value="'+(s.tempo||'')+'"></label>'+
+    '<label>Mesure<input type="text" id="timeSig" value="'+esc(s.timeSig||'4/4')+'"></label>'+
+    '<label>Capo<input type="number" id="capo" min="0" max="11" value="'+(s.capo||0)+'"></label></div>'+
+  '<label>Tags (séparés par des virgules)<input type="text" id="tags" value="'+esc(s.tags)+'"></label>'+
+  '<label>Paroles et accords (accords entre crochets : [C]Bonjour [G]toi)<textarea id="content" spellcheck="false">'+esc(s.content)+'</textarea></label>'+
+  '<div class="actions"><button class="btn" id="conv">Convertir « accords au-dessus des paroles »</button>'+
+    '<select id="semis" style="width:auto">'+[-6,-5,-4,-3,-2,-1,1,2,3,4,5,6].map(n=>'<option value="'+n+'"'+(n===1?' selected':'')+'>'+(n>0?'+':'')+n+' demi-ton'+(Math.abs(n)>1?'s':'')+'</option>').join('')+'</select>'+
+    '<button class="btn" id="trans">Transposer les accords</button></div>'+
+  '<p class="hint">Collez un texte avec les accords sur la ligne du dessus puis convertissez, ou transposez tous les accords d\'un coup.</p>'+
+  '<label>Notes<textarea id="notes" style="min-height:70px">'+esc(s.notes)+'</textarea></label>'+
+  extra + pdf + score +
+  '<div class="actions"><button class="btn primary" id="save">Enregistrer</button>'+
+    (s.id?'<button class="btn danger" id="del">Supprimer le morceau</button>':'')+
+    '<span id="msg" class="msg"></span></div></div>';
+  document.querySelectorAll('#editor input:not([type=file]),#editor textarea').forEach(el=>el.addEventListener('input',()=>{dirty=true}));
+  $('#save').onclick = save;
+  $('#conv').onclick = convert;
+  $('#trans').onclick = transpose;
+  if ($('#del')) $('#del').onclick = del;
+  if ($('#fav')) $('#fav').onclick = async()=>{ await api('songs/'+s.id+'/favorite',{method:'POST'}); await refresh(); openSongKeep(s.id); };
+  if ($('#dup')) $('#dup').onclick = async()=>{ if (dirty) await save(); const c = await api('songs/'+s.id+'/duplicate',{method:'POST'}); await refresh(); showEditor(c); say('Copie créée ✓','ok'); };
+  if ($('#toset')) $('#toset').onclick = async()=>{ const sid = +$('#setsel').value; const r = await jpost('sets/'+sid+'/songs',{songIds:[s.id]}); await refresh(); say('Ajouté au set ✓','ok'); };
+  if ($('#pdfin')) $('#pdfin').onchange = e=>uploadPdf(s.id, e.target.files[0]);
+  if ($('#pdfdel')) $('#pdfdel').onclick = async()=>{ if (dirty) await save(); await api('songs/'+s.id+'/pdf',{method:'DELETE'}); await refresh(); openSongKeep(s.id); };
+  if ($('#scorein')) $('#scorein').onchange = e=>uploadScore(s.id, e.target.files[0]);
+  if ($('#scoredel')) $('#scoredel').onclick = async()=>{ if (dirty) await save(); await api('songs/'+s.id+'/score',{method:'DELETE'}); await refresh(); openSongKeep(s.id); };
+  renderList();
+}
+async function openSongKeep(id){ dirty=false; const s = await api('songs/'+id); showEditor(s); }
+function say(text, cls){ const m=$('#msg'); if(m){ m.textContent=text; m.className='msg '+(cls||''); } }
+function formData(){
+  return {title:$('#title').value,artist:$('#artist').value,key:$('#key').value,tempo:+$('#tempo').value||0,
+    timeSig:$('#timeSig').value,capo:+$('#capo').value||0,tags:$('#tags').value,notes:$('#notes').value,content:$('#content').value};
+}
+async function save(){
+  const body = JSON.stringify(formData());
+  try{
+    const saved = current.id
+      ? await api('songs/'+current.id,{method:'PUT',body})
+      : await api('songs',{method:'POST',body});
+    dirty = false; await refresh(); showEditor(saved); say('Enregistré sur l\'appareil ✓','ok');
+  }catch(e){ say(e.message,'err'); }
+}
+async function del(){
+  if(!confirm('Supprimer définitivement « '+(current.title||'Sans titre')+' » ?')) return;
+  await api('songs/'+current.id,{method:'DELETE'}); dirty=false; await refresh(); renderEmpty();
+}
+async function convert(){
+  try{
+    const r = await jpost('convert',{text:$('#content').value});
+    $('#content').value = r.content; if(!$('#key').value) $('#key').value = r.key||''; dirty=true; say('Converti ✓','ok');
+  }catch(e){ say(e.message,'err'); }
+}
+async function transpose(){
+  try{
+    const r = await jpost('transpose',{content:$('#content').value,key:$('#key').value,semitones:+$('#semis').value});
+    $('#content').value = r.content; if (r.key) $('#key').value = r.key; dirty=true; say('Accords transposés ✓','ok');
+  }catch(e){ say(e.message,'err'); }
+}
+async function uploadPdf(id, file){
+  if(!file) return;
+  try{
+    if (dirty) await save();
+    await api('songs/'+id+'/pdf',{method:'POST',headers:{'X-Filename':encodeURIComponent(file.name),'Content-Type':'application/pdf'},body:file});
+    await refresh(); openSongKeep(id);
+  }catch(e){ say(e.message,'err'); }
+}
+async function uploadScore(id, file){
+  if(!file) return;
+  try{
+    if (dirty) await save();
+    say('Conversion de la partition…');
+    await api('importscore?attach='+id,{method:'POST',headers:{'X-Filename':encodeURIComponent(file.name),'Content-Type':'application/octet-stream'},body:file});
+    await refresh(); await openSongKeep(id); say('Partition jointe ✓','ok');
+  }catch(e){ say(e.message,'err'); }
+}
+
+// ---------- Sets ----------
+async function openSet(id){
+  if (dirty && !confirm('Abandonner les modifications non enregistrées ?')) return;
+  dirty = false;
+  const s = await api('sets/'+id);
+  showSet(s);
+}
+function showSet(s){
+  currentSet = s;
+  const inSet = new Set(s.entries.map(e=>e.songId));
+  const candidates = songs.filter(x=>!inSet.has(x.id)).sort((a,b)=>a.title.localeCompare(b.title,'fr',{sensitivity:'base'}));
+  $('#editor').innerHTML =
+  '<div class="form">'+
+  '<div class="actions"><label style="flex:1">Nom du set<input type="text" id="setname" value="'+esc(s.name)+'"></label>'+
+    '<button class="btn" id="rename" style="align-self:end">Renommer</button>'+
+    '<button class="btn danger" id="setdel" style="align-self:end">Supprimer le set</button></div>'+
+  '<h2 style="font-size:18px">Morceaux du set ('+s.entries.length+')</h2>'+
+  '<div id="entries">'+(s.entries.map((e,i)=>
+    '<div class="entry"><span class="n">'+(i+1)+'</span><div class="grow"><b>'+esc(e.title||'Sans titre')+'</b> <span class="hint">'+esc(e.artist)+(e.key?' · '+esc(e.key):'')+'</span></div>'+
+    '<button class="btn small" data-up="'+e.entryId+'"'+(i===0?' disabled':'')+'>↑</button>'+
+    '<button class="btn small" data-down="'+e.entryId+'"'+(i===s.entries.length-1?' disabled':'')+'>↓</button>'+
+    '<button class="btn small danger" data-rm="'+e.entryId+'">Retirer</button></div>').join('') || '<p class="hint">Ce set est vide. Ajoutez des morceaux ci-dessous.</p>')+'</div>'+
+  '<h2 style="font-size:18px">Ajouter des morceaux</h2>'+
+  '<input type="search" id="pickq" placeholder="Filtrer la liste…">'+
+  '<div class="pick" id="pick">'+candidates.map(x=>
+    '<label data-t="'+esc((x.title+' '+x.artist).toLowerCase())+'"><input type="checkbox" value="'+x.id+'"> <span>'+esc(x.title||'Sans titre')+' <span class="hint">'+esc(x.artist)+'</span></span></label>').join('')+
+    (candidates.length?'':'<p class="hint" style="padding:8px">Tous les morceaux sont déjà dans ce set.</p>')+'</div>'+
+  '<div class="actions"><button class="btn primary" id="addsel">Ajouter la sélection</button><span id="msg" class="msg"></span></div></div>';
+  $('#rename').onclick = async()=>{ try{ await jpost('sets/'+s.id,{name:$('#setname').value},'PUT'); await refresh(); openSetKeep(s.id); say('Renommé ✓','ok'); }catch(e){ say(e.message,'err'); } };
+  $('#setdel').onclick = async()=>{ if(!confirm('Supprimer le set « '+s.name+' » ? (les morceaux restent dans la bibliothèque)')) return; await api('sets/'+s.id,{method:'DELETE'}); await refresh(); renderEmpty(); };
+  document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveEntry(s.id,+b.dataset.up,-1));
+  document.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveEntry(s.id,+b.dataset.down,1));
+  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{ await api('sets/'+s.id+'/entries/'+b.dataset.rm,{method:'DELETE'}); await refresh(); openSetKeep(s.id); });
+  $('#pickq').oninput = ()=>{ const q=$('#pickq').value.trim().toLowerCase(); document.querySelectorAll('#pick label').forEach(l=>l.classList.toggle('hidden', !!q && !l.dataset.t.includes(q))); };
+  $('#addsel').onclick = async()=>{
+    const ids = Array.from(document.querySelectorAll('#pick input:checked')).map(i=>+i.value);
+    if (!ids.length) { say('Cochez au moins un morceau.','err'); return; }
+    await jpost('sets/'+s.id+'/songs',{songIds:ids}); await refresh(); openSetKeep(s.id);
+  };
+  renderList();
+}
+async function moveEntry(setId, entryId, delta){
+  await jpost('sets/'+setId+'/move',{entryId,delta}); await refresh(); openSetKeep(setId);
+}
+async function openSetKeep(id){ const s = await api('sets/'+id); showSet(s); }
+
+// ---------- Glisser-déposer ----------
+const drop = $('#drop');
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop', async e=>{
+  let n=0, bad=0, lastError='';
+  for (const f of e.dataTransfer.files){
+    const base = f.name.replace(/\.[^.]+$/,'');
+    try{
+      if (/\.pdf$/i.test(f.name)){
+        const s = await api('songs',{method:'POST',body:JSON.stringify({title:base})});
+        await api('songs/'+s.id+'/pdf',{method:'POST',headers:{'X-Filename':encodeURIComponent(f.name),'Content-Type':'application/pdf'},body:f});
+      } else if (/\.(mscz|mscx)$/i.test(f.name)){
+        await api('importscore',{method:'POST',headers:{'X-Filename':encodeURIComponent(f.name),'Content-Type':'application/octet-stream'},body:f});
+      } else {
+        await api('import',{method:'POST',body:JSON.stringify({title:base,text:await f.text()})});
+      }
+      n++;
+    }catch(err){ bad++; lastError = err.message; }
+  }
+  await refresh();
+  drop.textContent = n+' fichier(s) ajouté(s)'+(bad?(' — '+bad+' refusé(s) : '+lastError):'');
+  setTimeout(()=>{drop.innerHTML='Glissez ici des fichiers <b>.pdf</b>, <b>.txt</b>, <b>.cho</b> ou <b>MuseScore (.mscz)</b>'},5000);
+});
+window.addEventListener('beforeunload', e=>{ if(dirty){ e.preventDefault(); e.returnValue=''; } });
+
+if (PIN) { api('ping').then(start).catch(()=>showLogin('')); } else showLogin('');
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadence – Lecteur</title>
+<style>
+:root{--bg:#faf8f5;--card:#f4f1ed;--card2:#ebe8f1;--ink:#1c1b22;--muted:#5d5c68;--line:#d9d5de;--primary:#4f46e5;--on-primary:#fff;--chord:#c2410c}
+body.dark{--bg:#0e1015;--card:#14161d;--card2:#1f232c;--ink:#e7e5ec;--muted:#a5a4b0;--line:#33353f;--primary:#a9acff;--on-primary:#1b1a6b;--chord:#fbbf24}
+body.stage{--bg:#000;--card:#0b0b0c;--card2:#1a1a1c;--ink:#fff;--muted:#d1d1d6;--line:#2c2c2e;--primary:#ffd60a;--on-primary:#000;--chord:#ffd60a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+header{display:flex;gap:10px;align-items:center;padding:10px 18px;background:var(--card);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:19px;margin:0}
+.dot{width:32px;height:32px;border-radius:10px;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700}
+.sp{flex:1}
+.btn{border:0;border-radius:999px;padding:7px 14px;background:var(--card2);cursor:pointer;font-weight:600}
+.btn.on{background:var(--primary);color:var(--on-primary)}
+input[type=search],input[type=password],select{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 10px}
+input[type=color]{border:0;width:34px;height:34px;padding:0;background:none;cursor:pointer}
+main{display:grid;grid-template-columns:minmax(260px,340px) 1fr;height:calc(100vh - 56px)}
+aside{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:6px;padding:10px}
+.tabs .btn{flex:1}
+#q{margin:0 10px 8px}
+#list{overflow:auto;padding:0 10px 10px;flex:1}
+.song{padding:9px 12px;border-radius:12px;background:var(--card);margin-bottom:7px;cursor:pointer;border:2px solid transparent}
+.song.sel{border-color:var(--primary)}
+.song .a{color:var(--muted);font-size:14px}
+#view{overflow:auto;padding:0 22px 60px;min-height:0}
+.bar{position:sticky;top:0;background:var(--bg);padding:12px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);z-index:2}
+h2{margin:14px 0 2px}
+.meta{color:var(--muted);margin-bottom:6px}
+.sec{display:inline-block;background:var(--card2);color:var(--primary);font-weight:700;font-size:13px;letter-spacing:.6px;padding:3px 12px;border-radius:99px;margin:16px 0 6px;text-transform:uppercase}
+.line{display:flex;flex-wrap:wrap;gap:0 0;margin:2px 0}
+.line.chorus{border-left:3px solid var(--primary);padding-left:12px}
+.seg{display:inline-flex;flex-direction:column}
+.c{color:var(--chord);font-weight:700;font-size:.88em;min-height:1.3em;padding-right:8px;white-space:pre}
+.t{white-space:pre}
+.tab{font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow:auto;font-size:.75em}
+.com{font-style:italic;color:var(--muted)}
+.blank{height:.7em}
+.measures{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.m{border-left:2px solid var(--primary);padding:2px 10px;display:flex;gap:10px;background:var(--card);border-radius:6px}
+.cell{display:flex;flex-direction:column;align-items:center;min-width:34px}
+.cell .ch{color:var(--chord);font-weight:700;font-size:.8em;min-height:1.2em}
+.cell .n{font-weight:700}
+.cell .d{color:var(--muted);font-size:.65em}
+.cell .l{font-size:.8em}
+.mn{color:var(--muted);font-size:.7em;align-self:flex-start}
+.empty{display:grid;place-items:center;height:70%;color:var(--muted);text-align:center}
+#login{max-width:340px;margin:14vh auto;text-align:center;display:grid;gap:12px;padding:26px;background:var(--card);border-radius:22px}
+#login input{font-size:26px;text-align:center;letter-spacing:8px}
+.hidden{display:none!important}
+@media(max-width:800px){main{grid-template-columns:1fr;height:auto}aside{border-right:0;max-height:40vh}}
+</style>
+</head>
+<body>
+<div id="login" class="hidden">
+  <div class="dot" style="margin:auto;width:50px;height:50px;font-size:24px">C</div>
+  <h1 style="margin:0">Cadence – Lecteur</h1>
+  <p style="color:var(--muted);margin:0">Entrez le code à 4 chiffres affiché dans l'application.</p>
+  <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+  <button class="btn on" id="go">Ouvrir</button>
+  <div id="loginMsg" style="color:#ba1a1a"></div>
+</div>
+<div id="app" class="hidden">
+<header>
+  <div class="dot">C</div><h1>Cadence – Lecteur</h1><span class="sp"></span>
+  <span style="color:var(--muted);font-size:13px">lecture seule</span>
+  <select id="theme"><option value="auto">Thème auto</option><option value="light">Clair</option><option value="dark">Sombre</option><option value="stage">Scène</option></select>
+  <label title="Couleur de l'interface" style="display:flex;align-items:center"><input type="color" id="accent" value="#4f46e5"></label>
+</header>
+<main>
+  <aside>
+    <div class="tabs"><button class="btn on" id="tSongs">Morceaux</button><button class="btn" id="tSets">Sets</button></div>
+    <input id="q" type="search" placeholder="Rechercher…">
+    <div id="list"></div>
+  </aside>
+  <section id="view"><div class="empty"><div><h2>Choisissez un morceau</h2><p>Cette page est en lecture seule.<br>Elle se met à jour toute seule.</p></div></div></section>
+</main>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+let PIN = sessionStorage.getItem('pin') || '';
+let songs = [], sets = [], tab = 'songs', cur = null, curSet = null, version = '';
+const prefs = Object.assign({notation:0, font:20, fixed:1, theme:'auto', accent:''}, JSON.parse(localStorage.getItem('reader') || '{}'));
+let view = {t:0, track:0, mode:'chords'};
+function savePrefs(){ localStorage.setItem('reader', JSON.stringify(prefs)); }
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+async function api(path){
+  const r = await fetch('/api/'+path, {headers:{'X-Pin':PIN}});
+  if (r.status === 401){ showLogin('Code incorrect.'); throw new Error('401'); }
+  const data = await r.json().catch(()=>null);
+  if (!r.ok) throw new Error((data && data.error) || ('Erreur '+r.status));
+  return data;
+}
+function showLogin(msg){ $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#loginMsg').textContent = msg||''; $('#pin').value=''; }
+$('#go').onclick = async()=>{ PIN = $('#pin').value.trim(); try{ await api('ping'); sessionStorage.setItem('pin',PIN); start(); }catch(e){} };
+$('#pin').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#go').click(); });
+
+function applyTheme(){
+  document.body.classList.remove('dark','stage');
+  let t = prefs.theme;
+  if (t==='auto') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  if (t==='dark') document.body.classList.add('dark');
+  if (t==='stage') document.body.classList.add('stage');
+  if (prefs.accent){
+    document.body.style.setProperty('--primary', prefs.accent);
+    const c = prefs.accent.replace('#',''); const lum = (parseInt(c.substr(0,2),16)*0.3+parseInt(c.substr(2,2),16)*0.59+parseInt(c.substr(4,2),16)*0.11);
+    document.body.style.setProperty('--on-primary', lum>140 ? '#000' : '#fff');
+  } else { document.body.style.removeProperty('--primary'); document.body.style.removeProperty('--on-primary'); }
+}
+$('#theme').value = prefs.theme;
+$('#theme').onchange = e=>{ prefs.theme = e.target.value; savePrefs(); applyTheme(); };
+$('#accent').oninput = e=>{ prefs.accent = e.target.value; savePrefs(); applyTheme(); };
+applyTheme();
+
+async function start(){
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  await load(); setInterval(poll, 5000);
+}
+async function load(){
+  songs = await api('songs'); sets = await api('sets');
+  version = (await api('version')).v;
+  renderList();
+}
+async function poll(){
+  try{
+    const v = (await api('version')).v;
+    if (v !== version){
+      version = v; songs = await api('songs'); sets = await api('sets'); renderList();
+      if (curSet) openSet(curSet.id, true); else if (cur) show(true);
+    }
+  }catch(e){}
+}
+function setTab(t){ tab=t; $('#tSongs').classList.toggle('on',t==='songs'); $('#tSets').classList.toggle('on',t==='sets'); renderList(); }
+$('#tSongs').onclick = ()=>setTab('songs'); $('#tSets').onclick = ()=>setTab('sets');
+$('#q').oninput = renderList;
+
+function renderList(){
+  const q = $('#q').value.trim().toLowerCase();
+  if (tab==='songs'){
+    const items = songs.filter(s=>!q||(s.title+' '+s.artist+' '+s.tags).toLowerCase().includes(q)).sort((a,b)=>a.title.localeCompare(b.title,'fr',{sensitivity:'base'}));
+    $('#list').innerHTML = items.map(s=>'<div class="song'+(cur&&cur.id===s.id?' sel':'')+'" data-id="'+s.id+'"><div>'+(s.favorite?'★ ':'')+esc(s.title||'Sans titre')+(s.hasScore?' 🎼':'')+'</div><div class="a">'+esc(s.artist)+(s.key?' · '+esc(s.key):'')+'</div></div>').join('') || '<p style="padding:8px;color:var(--muted)">Aucun morceau.</p>';
+    document.querySelectorAll('#list .song').forEach(el=>el.onclick=()=>pick(+el.dataset.id));
+  } else {
+    const items = sets.filter(s=>!q||s.name.toLowerCase().includes(q));
+    $('#list').innerHTML = items.map(s=>'<div class="song'+(curSet&&curSet.id===s.id?' sel':'')+'" data-id="'+s.id+'"><div>'+esc(s.name)+'</div><div class="a">'+s.count+' morceau(x)</div></div>').join('') || '<p style="padding:8px;color:var(--muted)">Aucun set.</p>';
+    document.querySelectorAll('#list .song').forEach(el=>el.onclick=()=>openSet(+el.dataset.id));
+  }
+}
+function pick(id){ cur = songs.find(s=>s.id===id); curSet = null; view = {t:0, track:0, mode: cur && cur.content==='' && cur.hasScore ? 'score' : 'chords'}; show(); }
+
+async function openSet(id, quiet){
+  const s = await api('sets/'+id); curSet = s; cur = null; renderList();
+  $('#view').innerHTML = '<h2>'+esc(s.name)+'</h2><div class="meta">'+s.entries.length+' morceau(x)</div>'+
+    s.entries.map((e,i)=>'<div class="song" data-sid="'+e.songId+'"><div>'+(i+1)+'. '+esc(e.title||'Sans titre')+'</div><div class="a">'+esc(e.artist)+(e.key?' · '+esc(e.key):'')+'</div></div>').join('');
+  document.querySelectorAll('#view .song').forEach(el=>el.onclick=()=>{ setTab('songs'); pick(+el.dataset.sid); });
+}
+
+function ctl(label, id, body){ return body; }
+async function show(keepScroll){
+  if (!cur) return;
+  const sc = $('#view').scrollTop;
+  renderList();
+  const modes = [];
+  if (cur.hasScore) modes.push(['score','🎼 Solfège']);
+  modes.push(['chords','Paroles & accords']);
+  if (cur.hasPdf) modes.push(['pdf','PDF']);
+  if (!modes.some(m=>m[0]===view.mode)) view.mode = modes[0][0];
+  let bar = '<div class="bar">'+modes.map(m=>'<button class="btn'+(view.mode===m[0]?' on':'')+'" data-mode="'+m[0]+'">'+m[1]+'</button>').join('');
+  if (view.mode !== 'pdf'){
+    bar += '<button class="btn" id="tm">−</button><span id="tl">'+(view.t>0?'+':'')+view.t+'</span><button class="btn" id="tp">+</button>'+
+      '<select id="nota"><option value="0">A B C</option><option value="2">Do Ré Mi</option><option value="1">Nashville</option></select>'+
+      '<button class="btn" id="fm">A−</button><button class="btn" id="fp">A+</button>';
+  }
+  if (view.mode === 'score') bar += '<select id="fixed"><option value="1">Do fixe</option><option value="0">Do mobile</option></select><select id="track"></select>';
+  bar += '</div>';
+  $('#view').innerHTML = bar + '<div id="body"></div>';
+  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ view.mode=b.dataset.mode; show(); });
+  if ($('#tm')){
+    $('#tm').onclick=()=>{ view.t=Math.max(-11,view.t-1); show(true); };
+    $('#tp').onclick=()=>{ view.t=Math.min(11,view.t+1); show(true); };
+    $('#nota').value = prefs.notation; $('#nota').onchange=e=>{ prefs.notation=+e.target.value; savePrefs(); show(true); };
+    $('#fm').onclick=()=>{ prefs.font=Math.max(12,prefs.font-2); savePrefs(); show(true); };
+    $('#fp').onclick=()=>{ prefs.font=Math.min(60,prefs.font+2); savePrefs(); show(true); };
+  }
+  const body = $('#body'); body.style.fontSize = prefs.font+'px';
+  try{
+    if (view.mode === 'pdf'){
+      body.innerHTML = '<iframe style="width:100%;height:80vh;border:0;margin-top:10px" src="/api/songs/'+cur.id+'/pdf?pin='+encodeURIComponent(PIN)+'"></iframe>';
+    } else if (view.mode === 'score'){
+      const d = await api('songs/'+cur.id+'/solfege?t='+view.t+'&track='+view.track+'&fixed='+prefs.fixed+'&notation='+prefs.notation);
+      $('#fixed').value = prefs.fixed; $('#fixed').onchange=e=>{ prefs.fixed=+e.target.value; savePrefs(); show(true); };
+      $('#track').innerHTML = d.tracks.map((n,i)=>'<option value="'+i+'">'+esc(n)+'</option>').join('');
+      $('#track').value = d.track; $('#track').onchange=e=>{ view.track=+e.target.value; show(true); };
+      body.innerHTML = '<h2>'+esc(d.title||cur.title)+'</h2><div class="meta">'+esc(d.composer)+' · Tonalité '+esc(d.key)+' · '+esc(d.timeSig)+' · ♩ '+d.tempo+'</div>'+
+        '<div class="measures">'+d.measures.map(m=>'<div class="m"><span class="mn">'+m.n+'</span>'+m.cells.map(c=>
+          '<div class="cell"><span class="ch">'+esc(c.c||'')+'</span><span class="n">'+esc(c.t)+'</span><span class="d">'+esc(c.d)+'</span><span class="l">'+esc(c.l||'')+'</span></div>').join('')+'</div>').join('')+'</div>';
+    } else {
+      const d = await api('songs/'+cur.id+'/render?t='+view.t+'&notation='+prefs.notation);
+      let h = '<h2>'+esc(d.title||'Sans titre')+'</h2><div class="meta">'+esc(d.artist)+(d.key?' · Tonalité '+esc(d.key):'')+(d.capo?' · Capo '+d.capo:'')+(d.tempo?' · ♩ '+d.tempo:'')+'</div>';
+      for (const l of d.lines){
+        if (l.k==='blank') h+='<div class="blank"></div>';
+        else if (l.k==='section') h+='<div class="sec">'+esc(l.t)+'</div>';
+        else if (l.k==='comment') h+='<div class="com">'+esc(l.t)+'</div>';
+        else if (l.k==='tab') h+='<div class="tab">'+esc(l.t)+'</div>';
+        else h+='<div class="line'+(l.chorus?' chorus':'')+'">'+l.segs.map(s=>'<span class="seg"><span class="c">'+esc(s.c||'')+'</span><span class="t">'+esc(s.t)+'</span></span>').join('')+'</div>';
+      }
+      body.innerHTML = h;
+    }
+  }catch(e){ body.innerHTML = '<p style="color:#ba1a1a">'+esc(e.message)+'</p>'; }
+  if (keepScroll) $('#view').scrollTop = sc;
+}
+
+if (PIN) api('ping').then(start).catch(()=>{});
+else api('ping').then(start).catch(()=>showLogin(''));
+</script>
+</body>
+</html>
